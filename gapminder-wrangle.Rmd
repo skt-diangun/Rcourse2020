@@ -1,0 +1,21 @@
+---
+title: "gapminder-wrangle"
+author: "ckj"
+date: "2020/7/9"
+output: html_document
+---
+
+```{r setup, message=F,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Learn "dplyr" using gapminder dataset
+
+```{r}
+gapminder<-read.csv("data/gapminder.csv")
+head(gapminder,10)
+```
+```{r}
+filter(gapminder,lifeExp<29)
+```
