@@ -20,7 +20,7 @@ colSums(apply(ca_pa,c(1,2),is.na))
 Explain: It applies function is.na to dataframe 
 ca_pa then sum the results by cols.  
 ```
-```{r message = FALSE}
+```{r,message = FALSE}
 ca_pa<-readr::read_csv("data/calif_penn_2011.csv")
 dim(ca_pa)# answer of b
 colSums(apply(ca_pa,c(1,2),is.na))
