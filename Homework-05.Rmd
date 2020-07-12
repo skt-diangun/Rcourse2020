@@ -21,16 +21,74 @@ a = 1 - \frac{\log{10}}{\log{(P99/P99.9)}} ~,
 
 Because of measurement error and sampling noise, we can't find find one value of $a$ which will work for all three equations \eqref{eqn:1percent-vs-0.1-percent}--\eqref{eqn:1percent-vs-0.5-percent}.  Generally, trying to make all three equations come close to balancing gives a better estimate of $a$ than just solving one of them.  (This is analogous to finding the slope and intercept of a regression line by trying to come close to all the points in a scatterplot, and not just running a line through two of them.)
 
-
+```{r setup, message = F, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(tidyverse)
+```
 1. We estimate $a$ by minimizing
 \[
 \left(\left(\frac{P99}{P99.9}\right)^{-a+1} - 10\right)^2 + \left(\left(\frac{P99.5}{P99.9}\right)^{-a+1} - 5\right)^2 +  \left(\left(\frac{P99}{P99.5}\right)^{-a+1} - 2\right)^2
 \]
 Write a function, `percentile_ratio_discrepancies`, which takes as inputs `P99`, `P99.5`, `P99.9` and `a`, and returns the value of the expression above.  Check that when `P99=1e6`, `P99.5=2e6`, `P99.9=1e7` and `a=2`, your function returns `0`.
+```{r,message=FALSE,warning=FALSE}
+wtid<-read_csv("data/wtid-report.csv")
+percentile_ratio_discrepancies<-function(P99,P99.5,P99.9,a){
+  x<-((P99/P99.9)^(-a+1)-10)^2+((P99.5/P99.9)^(-a+1)-5)^2+((P99/P99.5)^(-a+1)-2)^2
+  return(x)
+}
+percentile_ratio_discrepancies(1e6,2e6,1e7,2)
+```
 
 2. Write a function, `exponent.multi_ratios_est`, which takes as inputs `P99`, `P99.5`, `P99.9`, and estimates `a`.  It should minimize your `percentile_ratio_discrepancies` function.  The starting value for the minimization should come from \eqref{eqn:exponent-from-quantile-ratio}.  Check that when `P99=1e6`, `P99.5=2e6` and `P99.9=1e7`, your function returns an `a` of 2.
+```{r,warning=FALSE}
+exponent.multi_ratios_est<-function(P99,P99.5,P99.9){
+maximum.iterations <- 100000
+deriv.step <- 1/10000
+step.scale <- 1e-11
+stopping.deriv <- 1/100
+iteration <- 0
+deriv <- Inf
+a<-1-log(10,exp(1))/log(P99/P99.9,exp(1))
+while ((iteration<maximum.iterations) && (abs(deriv)>stopping.deriv)){
+iteration <- iteration + 1
+prd.1 <- percentile_ratio_discrepancies(P99,P99.5,P99.9,a)
+prd.2 <- percentile_ratio_discrepancies(P99,P99.5,P99.9,a+deriv.step)
+deriv <- (prd.2 - prd.1)/deriv.step
+a <- a - step.scale*deriv
+}
+fit <- list(a=a,iterations=iteration,dr=deriv,converged=(iteration < maximum.iterations))
+return(fit)
+}
+exponent.multi_ratios_est(1e6,2e6,1e7)$a
+```
 
-3. Write a function which uses  `exponent.multi_ratios_est` to estimate $a$ for the US for every year from 1913 to 2012.  (There are many ways you could do thi, including loops.)  Plot the estimates; make sure the labels of the plot are appropriate.
+3. Write a function which uses  `exponent.multi_ratios_est` to estimate $a$ for the US for every year from 1913 to 2012.  (There are many ways you could do this, including loops.)  Plot the estimates; make sure the labels of the plot are appropriate.
+```{r,warning=FALSE}
+estimate_a_US<-function(){
+  estimate_a<-c()
+ for (i in c(1:100)) {
+ e_a<-exponent.multi_ratios_est(wtid$`P99 income threshold`[i],
+                                wtid$`P99.5 income threshold`[i],
+                                wtid$`P99.9 income threshold`[i])$a
+ estimate_a<-c(estimate_a,e_a)
+ }
+  return(estimate_a)
+}
+estimate_a<-estimate_a_US()
+eay<-data.frame(estimate_a=estimate_a,year=c(1913:2012))
+eay %>% ggplot() + geom_point(aes(x = year, y = estimate_a),color='red')+
+  labs(x = "year", y = "estimate_a",title = "answer of 3")
+```
 
 4. Use \eqref{eqn:exponent-from-quantile-ratio} to estimate $a$ for the US for every year.  Make a scatter-plot of these estimates against those from problem 3.  If they are identical or completely independent, something is wrong with at least one part of your code.  Otherwise, can you say anything about how the two estimates compare?
+```{r}
+# red points are answers of 3 ,green scatter-points are answers of 4
+a<-1-log(10,exp(1))/log(wtid$`P99 income threshold`/wtid$`P99.9 income threshold`,exp(1))
+est_a<-data.frame(eay,est=a)
+  est_a %>% ggplot() + geom_point(aes(x = year, y = estimate_a),color='red')+
+  labs(x = "year", y = "estimate_a",title = "answer of 4")+
+   geom_point(aes(x = year, y = est),color="green",pch=0.1)
+#Explain: the two estimates are quite near ,and the latter one is larger than the former one.
+  all.equal(est_a$estimate_a,est_a$est)
+```
 
