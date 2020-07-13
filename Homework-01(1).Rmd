@@ -153,22 +153,8 @@ title("Manitoba’s Largest Lakes")
 ```
 MB.Ch1.7. Look up the help page for the R function dotchart(). Use this function to display the areas of the Manitoba lakes (a) on a linear scale, and (b) on a logarithmic scale. Add, in each case, suitable labeling information.
 ```{r}
-x=matrix(c( 217,254,248,254,253,227,178,207,217,
-            24387,5374,4624,2247,1353,1223,1151,755,657),ncol=2)
-y<-x
-x[,2]<-log2(x[,2])
-dotchart(t(x),pch=16,
-         xlim=c(170,280),
-         main="Manitoba’s Largest Lakes",
-         xlab =" elevation",
-         ylab =" log2(area)"
-         )
-dotchart(t(y),pch=16,
-         xlim=c(170,280),ylog = T,
-         main="Manitoba’s Largest Lakes",
-         xlab =" elevation",
-         ylab =" area"
-         )
+dotchart(area,xlab = "log2(area)",ylab = "index")
+dotchart(log2(area),xlab = "log2(area)",ylab = "index")
 ```
 
 MB.Ch1.8. Using the sum() function, obtain a lower bound for the area of Manitoba covered by water.
