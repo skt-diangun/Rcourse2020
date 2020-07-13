@@ -1,0 +1,119 @@
+---
+title: "project homework"
+author: "Chang KuiJian----ZheJiang University" 
+output: pdf_document
+---
+
+```{r setup, message = F, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(tidyverse)
+```
+
+## Abstract :  A complete data analysis of the data _Gapminder_ with R language using tidyverse, ggplot2, function, model etc.
+
+## Keyword :  Gapminder , R Language , Data Analysis
+
+
+
+## Text :
+We will analyze the relationship between the variable that the gapminder.csv in data file contains or implies.We analyzed in four angles in total.
+
+```{r,echo=FALSE}
+gapminder<-read.csv('data/gapminder.csv')
+gapminder<-gapminder %>% mutate(gdp = pop * gdpPercap)
+gapminder<-gapminder %>% group_by(continent,year) %>% mutate(cont_pop = sum(pop),cont_lifeExp = sum(lifeExp*pop)/cont_pop) %>% ungroup()
+lmcoe<-function(col1,col2){
+  y<-data.frame(y1=col1,y2=col2)
+  x<-coefficients(lm(y1~y2,y))
+  return(x)
+  }
+```
+
+1.population of continent among years :
+We plot the population of each continent among years, and fit the point with linear model.According to the following plot, we conclude that the population of each continent has increased more or less since 1950s. All of them fit the linear model well, and the population of Asia has the fastest growing while that of Oceania has the slowest.
+ 
+ 
+```{r,echo=FALSE}
+gapminder1<-gapminder %>% filter(continent=="Asia")
+c1<-lmcoe(gapminder1$cont_pop,gapminder1$year)
+gapminder2<-gapminder %>% filter(continent=="Americas")
+c2<-lmcoe(gapminder2$cont_pop,gapminder2$year)
+gapminder3<-gapminder %>% filter(continent=="Africa")
+c3<-lmcoe(gapminder3$cont_pop,gapminder3$year)
+gapminder4<-gapminder %>% filter(continent=="Europe")
+c4<-lmcoe(gapminder4$cont_pop,gapminder4$year)
+gapminder5<-gapminder %>% filter(continent=="Oceania")
+c5<-lmcoe(gapminder5$cont_pop,gapminder5$year)
+ggplot(data = gapminder) +
+  geom_point(aes(x = year, y = cont_pop, color = continent)) +
+  geom_line(aes(x = year, y = c1[1]+c1[2]*year)) +
+  geom_line(aes(x = year, y = c2[1]+c2[2]*year)) +
+  geom_line(aes(x = year, y = c3[1]+c3[2]*year)) +
+  geom_line(aes(x = year, y = c4[1]+c4[2]*year)) +
+  geom_line(aes(x = year, y = c5[1]+c5[2]*year)) +
+  labs(x = "Year",y = "pop",title = "contient pop ~ year") 
+```
+
+
+
+2.life expectation of continent among years :
+We plot the life expectation of each continent among years, and fit the point with linear model.According to the following plot, we conclude that the life expectation of each continent has increased a lot since 1950s. All of them fit the linear model well, and the life expectation of Oceania has the highest value since 1950s while that of Africa has the lowest.But the growing rate of Asia and Africa are quite high. 
+
+
+```{r,echo=FALSE}
+gapminder1<-gapminder %>% filter(continent=="Asia")
+c1<-lmcoe(gapminder1$cont_lifeExp,gapminder1$year)
+gapminder2<-gapminder %>% filter(continent=="Americas")
+c2<-lmcoe(gapminder2$cont_lifeExp,gapminder2$year)
+gapminder3<-gapminder %>% filter(continent=="Africa")
+c3<-lmcoe(gapminder3$cont_lifeExp,gapminder3$year)
+gapminder4<-gapminder %>% filter(continent=="Europe")
+c4<-lmcoe(gapminder4$cont_lifeExp,gapminder4$year)
+gapminder5<-gapminder %>% filter(continent=="Oceania")
+c5<-lmcoe(gapminder5$cont_lifeExp,gapminder5$year)
+ggplot(data = gapminder) +
+  geom_point(aes(x = year, y = cont_lifeExp, color = continent)) +
+  geom_line(aes(x = year, y = c1[1]+c1[2]*year)) +
+  geom_line(aes(x = year, y = c2[1]+c2[2]*year)) +
+  geom_line(aes(x = year, y = c3[1]+c3[2]*year)) +
+  geom_line(aes(x = year, y = c4[1]+c4[2]*year)) +
+  geom_line(aes(x = year, y = c5[1]+c5[2]*year)) +
+  labs(x = "Year",y = "lifeExp",title = "contient lifeExp ~ year") 
+```
+
+
+
+3.The relationship between lifeEXp and gdpPercap :
+We have the lifeEXp and gdpPercap plotted, and fit the point with linear model.According to the following plot, we can see that the lifeEXp and gdpPercap fit the linear model badly, and the fit model seems more likely to be log function.But the claim that there's a positive correlation between lifeEXp and gdpPercap.
+
+
+```{r,echo=FALSE}
+c1<-lmcoe(gapminder$lifeExp,gapminder$gdpPercap)
+ggplot(data = gapminder) +
+  geom_point(aes(x = gdpPercap, y = lifeExp, color = continent)) +
+   geom_line(aes(x = gdpPercap, y = c1[1]+c1[2]*gdpPercap))+
+  labs(x = "gdpPercap",y = "lifeExp",title = "lifeExp  ~  gdpPercap") 
+```
+
+
+
+4.A tpical example : the development of China among years
+We have the gdp, gpdPercap, lifeEXp plotted against year.And we can see the all round development of China.Although there is a little swing at about 1960, the macroscopic increase of gdp, gpdPercap and lifeEXp is remarkable and enormous.Besides the growing rate of these three variable is also inspiring.
+
+
+```{r,echo=FALSE}
+China<-gapminder %>% filter(country=="China")
+ggplot(data = China) +
+  geom_line(aes(x = year, y = log10(gdp), color = 'red')) +
+  labs(x = "year",y = "log(gdp)",title = "gdp ~ year   CHINA") 
+ggplot(data = China) +
+  geom_line(aes(x = year, y = log10(gdpPercap), color = 'red')) +
+  labs(x = "year",y = "log(gdpPercap)",title = "gdpPercap ~ year   CHINA") 
+ggplot(data = China) +
+  geom_line(aes(x = year, y = lifeExp, color = 'red')) +
+  labs(x = "year",y = "lifeExp",title = "lifeExp ~ year   CHINA") 
+```
+
+
+
+That is all the data analysis required of gadminder.
